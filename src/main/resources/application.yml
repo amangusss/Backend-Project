@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: application-secret.yml
+  profiles:
+    include: datasource
+  application:
+    name: backend-project
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Educational+Internship
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+server:
+  port: 8082
