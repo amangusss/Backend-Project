@@ -30,13 +30,13 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     Long id;
 
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(name = "username", unique = true)
     String username;
 
     @Column(name = "password",nullable = false)
     String password;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", unique = true)
     String email;
 
     @Column(name = "created_at", nullable = false)
@@ -45,12 +45,21 @@ public class User implements UserDetails {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Column(name = "enabled")
+    boolean enabled;
+
+    @Column(name = "provider")
+    String provider;
+
+    @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     Set<Roles> roles = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY)
+    @Builder.Default
     Set<Entry> entries = new HashSet<>();
+
 
     @PrePersist
     protected void onCreate() {

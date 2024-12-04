@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -12,21 +12,21 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "refresh_tokens")
+@Table(name = "password_reset_tokens")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RefreshToken {
+public class PasswordResetToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     Long id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-    User user;
-
     @Column(nullable = false, unique = true)
     String token;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, name = "user_id")
+    User user;
+
     @Column(nullable = false)
-    Instant expiryDate;
+    LocalDateTime expiryDate;
 }

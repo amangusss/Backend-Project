@@ -1,5 +1,6 @@
 package alatoo.edu.kg.api.utils;
 
+import alatoo.edu.kg.store.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -22,8 +23,17 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private long expirationMillis;
 
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpirationMillis;
+
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
     }
 
     public Date extractExpiration(String token) {
@@ -49,6 +59,18 @@ public class JwtUtils {
 
     public String generateToken(UserDetails userDetails) {
         return createToken(userDetails.getUsername(), expirationMillis);
+    }
+
+    public String generateRefreshToken(User user) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpirationMillis);
+
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private String createToken(String subject, long expiration) {

@@ -2,7 +2,9 @@ package alatoo.edu.kg.api.controller.auth;
 
 
 import alatoo.edu.kg.api.exception.TokenRefreshException;
-import alatoo.edu.kg.api.payload.token.TokenRefreshRequest;
+import alatoo.edu.kg.api.payload.password.PasswordResetConfirmRequestDTO;
+import alatoo.edu.kg.api.payload.password.PasswordResetRequestDTO;
+import alatoo.edu.kg.api.payload.token.TokenRefreshRequestDTO;
 import alatoo.edu.kg.api.payload.user.UserDTO;
 import alatoo.edu.kg.api.payload.user.UserLoginRequestDTO;
 import alatoo.edu.kg.api.payload.user.UserLoginResponseDTO;
@@ -18,10 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,6 +36,16 @@ public final class AuthController implements AuthControllerDocumentation {
     public ResponseEntity<UserDTO> register(@Valid @RequestBody UserRegisterRequestDTO dto) {
         UserDTO registeredUser = authService.register(dto);
         return ResponseEntity.status(201).body(registeredUser);
+    }
+
+    @GetMapping("/confirm")
+    public ResponseEntity<?> confirmRegistration(@RequestParam("token") String token) {
+        try {
+            authService.confirmRegistration(token);
+            return ResponseEntity.ok("Registration confirmed successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error confirming registration: " + e.getMessage());
+        }
     }
 
     @PostMapping("/login")
@@ -55,8 +65,28 @@ public final class AuthController implements AuthControllerDocumentation {
         }
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> initiatePasswordReset(@Valid @RequestBody PasswordResetRequestDTO dto) {
+        try {
+            authService.initiatePasswordReset(dto.email());
+            return ResponseEntity.ok("Password reset link has been sent to your email.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error initiating password reset: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/reset-password/confirm")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO request) {
+        try {
+            authService.resetPassword(request.token(), request.newPassword());
+            return ResponseEntity.ok("Password has been reset successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error resetting password: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
         String requestRefreshToken = request.getRefreshToken();
 
         return refreshTokenService.findByToken(requestRefreshToken)
@@ -66,7 +96,6 @@ public final class AuthController implements AuthControllerDocumentation {
                     refreshTokenService.deleteByUserId(user.getId());
 
                     String newAccessToken = jwtUtils.generateToken(user);
-
                     String newRefreshToken = refreshTokenService.createRefreshToken(user).getToken();
 
                     UserLoginResponseDTO response = new UserLoginResponseDTO(

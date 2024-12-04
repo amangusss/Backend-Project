@@ -7,18 +7,27 @@ import alatoo.edu.kg.api.payload.user.UserRegisterRequestDTO;
 import alatoo.edu.kg.store.entity.User;
 
 import org.mapstruct.*;
+import org.mapstruct.factory.Mappers;
 
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 
 @Mapper(componentModel = SPRING)
 public interface UserMapper {
+    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+
     UserDTO toDTO(User user);
 
-    @Mapping(target = "roles", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "provider", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "entries", ignore = true)
     User toUserFromRegisterRequest(UserRegisterRequestDTO dto);
 
     @Mapping(target = "accessToken", ignore = true)
+    @Mapping(target = "refreshToken", ignore = true)
     UserLoginResponseDTO toLoginResponseDTO(User user);
 
     UserPublicDTO toPublicDto(User user);

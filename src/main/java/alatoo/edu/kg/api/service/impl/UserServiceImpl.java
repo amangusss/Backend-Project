@@ -37,6 +37,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> findByEmail(String email) {
+        return repository.findByEmail(email);
+    }
+
+    @Override
     public List<UserPublicDTO> getAllUsers() {
         List<User> users = repository.findAll();
         return users.stream()
@@ -77,5 +82,15 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User not found");
         }
         repository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return repository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return repository.existsByUsername(username);
     }
 }

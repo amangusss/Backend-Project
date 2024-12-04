@@ -8,4 +8,8 @@ import alatoo.edu.kg.api.payload.user.UserRegisterRequestDTO;
 public interface AuthService {
     UserDTO register(UserRegisterRequestDTO dto);
     UserLoginResponseDTO login(UserLoginRequestDTO dto);
+    void logout(String refreshToken);
+    void confirmRegistration(String token);
+    void initiatePasswordReset(String email);
+    void resetPassword(String token, String newPassword);
 }

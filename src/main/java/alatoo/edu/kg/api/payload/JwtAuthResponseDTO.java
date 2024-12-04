@@ -3,11 +3,11 @@ package alatoo.edu.kg.api.payload;
 import lombok.Data;
 
 @Data
-public class JwtAuthResponse {
+public class JwtAuthResponseDTO {
     private String accessToken;
     private String tokenType = "Bearer";
 
-    public JwtAuthResponse(String accessToken) {
+    public JwtAuthResponseDTO(String accessToken) {
         this.accessToken = accessToken;
     }
 }
