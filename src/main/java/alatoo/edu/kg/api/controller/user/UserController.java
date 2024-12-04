@@ -19,27 +19,27 @@ public final class UserController implements UserControllerDocumentation {
 
     private final UserService userService;
 
-    @GetMapping
+    @Override
     public ResponseEntity<List<UserPublicDTO>> getAllUsers() {
         List<UserPublicDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{id}")
+    @Override
     public ResponseEntity<UserPublicDTO> getUserById(@PathVariable Long id) {
         UserDTO user = userService.getUserById(id);
         UserPublicDTO publicUser = new UserPublicDTO(user.getId(), user.getUsername());
         return ResponseEntity.ok(publicUser);
     }
 
-    @PutMapping("/{id}")
+    @Override
     public ResponseEntity<UserDTO> update(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
         UserDTO updatedUser = userService.update(id, dto);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/users/{id}")
+    @Override
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();

@@ -32,13 +32,13 @@ public final class AuthController implements AuthControllerDocumentation {
     private final RefreshTokenService refreshTokenService;
     private final JwtUtils jwtUtils;
 
-    @PostMapping("/register")
+    @Override
     public ResponseEntity<UserDTO> register(@Valid @RequestBody UserRegisterRequestDTO dto) {
         UserDTO registeredUser = authService.register(dto);
         return ResponseEntity.status(201).body(registeredUser);
     }
 
-    @GetMapping("/confirm")
+    @Override
     public ResponseEntity<?> confirmRegistration(@RequestParam("token") String token) {
         try {
             authService.confirmRegistration(token);
@@ -48,13 +48,13 @@ public final class AuthController implements AuthControllerDocumentation {
         }
     }
 
-    @PostMapping("/login")
+    @Override
     public ResponseEntity<UserLoginResponseDTO> login(@Valid @RequestBody UserLoginRequestDTO dto) {
         UserLoginResponseDTO loginResponse = authService.login(dto);
         return ResponseEntity.ok(loginResponse);
     }
 
-    @PostMapping("/logout")
+    @Override
     public ResponseEntity<?> logout() {
         User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (user != null) {
@@ -65,7 +65,7 @@ public final class AuthController implements AuthControllerDocumentation {
         }
     }
 
-    @PostMapping("/reset-password")
+    @Override
     public ResponseEntity<?> initiatePasswordReset(@Valid @RequestBody PasswordResetRequestDTO dto) {
         try {
             authService.initiatePasswordReset(dto.email());
@@ -75,7 +75,7 @@ public final class AuthController implements AuthControllerDocumentation {
         }
     }
 
-    @PostMapping("/reset-password/confirm")
+    @Override
     public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO request) {
         try {
             authService.resetPassword(request.token(), request.newPassword());
@@ -85,7 +85,7 @@ public final class AuthController implements AuthControllerDocumentation {
         }
     }
 
-    @PostMapping("/refresh-token")
+    @Override
     public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequestDTO request) {
         String requestRefreshToken = request.getRefreshToken();
 
