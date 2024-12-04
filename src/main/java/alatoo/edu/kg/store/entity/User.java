@@ -27,7 +27,7 @@ import java.util.Set;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @Column(name = "username", unique = true)
@@ -53,13 +53,7 @@ public class User implements UserDetails {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    @Builder.Default
     Set<Roles> roles = new HashSet<>();
-
-    @OneToMany(fetch = FetchType.LAZY)
-    @Builder.Default
-    Set<Entry> entries = new HashSet<>();
-
 
     @PrePersist
     protected void onCreate() {

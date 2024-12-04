@@ -4,6 +4,7 @@ package alatoo.edu.kg.api.controller.user;
 import alatoo.edu.kg.api.payload.user.UserDTO;
 import alatoo.edu.kg.api.payload.user.UserPublicDTO;
 import alatoo.edu.kg.api.service.UserService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public final class UserController implements UserControllerDocumentation {
 
