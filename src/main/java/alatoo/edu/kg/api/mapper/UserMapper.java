@@ -17,6 +17,11 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "provider", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "favoritePosts", ignore = true)
     User toUserFromRegisterRequest(UserRegisterRequestDTO dto);
 
     @Mapping(target = "accessToken", ignore = true)

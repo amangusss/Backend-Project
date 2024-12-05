@@ -1,17 +1,16 @@
 package alatoo.edu.kg.api.config;
 
 import alatoo.edu.kg.api.filter.JwtAuthenticationFilter;
+import alatoo.edu.kg.api.service.oauth2.CustomOAuth2User;
+import alatoo.edu.kg.api.service.oauth2.CustomOAuth2UserService;
 
-import alatoo.edu.kg.api.service.CustomOAuth2User;
-import alatoo.edu.kg.api.service.CustomOAuth2UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;

@@ -11,25 +11,31 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "reminders")
+@Table(name = "post_history")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Reminder {
+public class PostHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "reminder_time", nullable = false)
-    LocalDateTime reminderTime;
+    @Column(nullable = false)
+    Integer version;
+
+    @Column(nullable = false)
+    String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    String description;
+
+    @Column(nullable = false)
+    LocalDateTime modifiedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    User user;
-
-    @Column(nullable = false)
-    boolean sent = false;
+    @JoinColumn(name = "modified_by", nullable = false)
+    User modifiedBy;
 }

@@ -1,9 +1,7 @@
 package alatoo.edu.kg.api.exception;
 
-import org.springframework.http.HttpStatus;
-
-public class UsernameTakenException extends BaseException {
+public class UsernameTakenException extends ConflictException {
     public UsernameTakenException() {
-        super("Username is already taken", HttpStatus.CONFLICT);
+        super("Username is already taken");
     }
 }

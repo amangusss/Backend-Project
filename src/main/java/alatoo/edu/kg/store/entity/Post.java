@@ -9,6 +9,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -37,8 +41,14 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    Integer currentVersion = 1;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     User author;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>();
 }

@@ -1,6 +1,5 @@
 package alatoo.edu.kg.api.controller.auth;
 
-
 import alatoo.edu.kg.api.exception.TokenRefreshException;
 import alatoo.edu.kg.api.payload.password.PasswordResetConfirmRequestDTO;
 import alatoo.edu.kg.api.payload.password.PasswordResetRequestDTO;
@@ -19,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,9 +54,13 @@ public final class AuthController implements AuthControllerDocumentation {
 
     @Override
     public ResponseEntity<?> logout() {
-        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user != null) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            User user = (User) authentication.getPrincipal();
             refreshTokenService.deleteByUserId(user.getId());
+
+            SecurityContextHolder.clearContext();
+
             return ResponseEntity.ok("You have successfully logged out.");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("The user is not logged in.");
@@ -105,6 +109,6 @@ public final class AuthController implements AuthControllerDocumentation {
 
                     return ResponseEntity.ok(response);
                 })
-                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token was not found."));
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken));
     }
 }

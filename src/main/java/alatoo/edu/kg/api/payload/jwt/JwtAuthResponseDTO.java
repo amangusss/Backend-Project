@@ -1,4 +1,4 @@
-package alatoo.edu.kg.api.payload;
+package alatoo.edu.kg.api.payload.jwt;
 
 import lombok.Data;
 

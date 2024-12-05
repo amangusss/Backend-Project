@@ -1,4 +1,4 @@
-package alatoo.edu.kg.api.service;
+package alatoo.edu.kg.api.service.oauth2;
 
 import alatoo.edu.kg.api.utils.JwtUtils;
 import alatoo.edu.kg.store.entity.User;
