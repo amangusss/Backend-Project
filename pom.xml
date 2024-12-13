@@ -8,8 +8,9 @@
         <version>3.3.5</version>
     </parent>
     <groupId>alatoo.edu.kg</groupId>
-    <artifactId>alatoo.edu.kg</artifactId>
+    <artifactId>BackendProject</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <url/>
     <licenses>
         <license/>
@@ -161,6 +162,18 @@
                         <phase>prepare-package</phase>
                         <goals>
                             <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
                         </goals>
                     </execution>
                 </executions>

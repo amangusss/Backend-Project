@@ -1,14 +1,12 @@
 spring:
-  config:
-    import: application-secret.yml
   profiles:
     include: datasource
   application:
     name: backend-project
   datasource:
-    url: jdbc:postgresql://localhost:5432/Educational+Internship
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -25,8 +23,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${spring.oauth2.client.registration.google.client-id}
-            client-secret: ${spring.oauth2.client.registration.google.client-secret}
+            client-id: ${SPRING_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
+            client-secret: ${SPRING_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
@@ -41,8 +39,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${spring.mail.username}
-    password: ${spring.mail.password}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -50,10 +48,14 @@ spring:
           starttls:
             enable: true
 
-
 logging:
   level:
     org.springframework.security: DEBUG
 
 server:
   port: 8082
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  refreshExpiration: ${JWT_REFRESH_EXPIRATION}

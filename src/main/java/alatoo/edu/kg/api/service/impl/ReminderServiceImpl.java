@@ -9,12 +9,16 @@ import alatoo.edu.kg.api.service.ReminderService;
 import alatoo.edu.kg.store.entity.Post;
 import alatoo.edu.kg.store.entity.Reminder;
 import alatoo.edu.kg.store.entity.User;
+import alatoo.edu.kg.store.entity.UserDetailsImpl;
 import alatoo.edu.kg.store.repository.PostRepository;
 import alatoo.edu.kg.store.repository.ReminderRepository;
 
+import alatoo.edu.kg.store.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -29,10 +33,12 @@ public class ReminderServiceImpl implements ReminderService {
     ReminderRepository reminderRepository;
     PostRepository postRepository;
     ReminderMapper reminderMapper;
+    UserRepository userRepository;
 
     @Override
+    @Transactional
     public ReminderResponseDTO createReminder(Long postId, ReminderRequestDTO dto) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
 
@@ -45,8 +51,9 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    @Transactional
     public List<ReminderResponseDTO> getUserReminders() {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         List<Reminder> reminders = reminderRepository.findByUserId(currentUser.getId());
         return reminders.stream()
                 .map(reminderMapper::toDTO)
@@ -54,15 +61,27 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    @Transactional
     public void deleteReminder(Long reminderId) {
         Reminder reminder = reminderRepository.findById(reminderId)
                 .orElseThrow(() -> new NotFoundException("Reminder not found with id: " + reminderId));
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         if (!reminder.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedActionException("You are not authorized to delete this reminder");
         }
 
         reminderRepository.deleteById(reminderId);
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedActionException("User not authenticated");
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userRepository.findByIdWithFavoritePosts(userDetails.getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
     }
 }

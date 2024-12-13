@@ -53,6 +53,7 @@ public class User implements UserDetails {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     Set<Roles> roles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -61,6 +62,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "post_id")
     )
+    @Builder.Default
     private Set<Post> favoritePosts = new HashSet<>();
 
     @PrePersist

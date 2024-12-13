@@ -8,10 +8,7 @@ import alatoo.edu.kg.api.mapper.UserMapper;
 import alatoo.edu.kg.api.payload.post.PostRequestDTO;
 import alatoo.edu.kg.api.payload.post.PostResponseDTO;
 import alatoo.edu.kg.api.service.PostService;
-import alatoo.edu.kg.store.entity.Image;
-import alatoo.edu.kg.store.entity.Post;
-import alatoo.edu.kg.store.entity.PostHistory;
-import alatoo.edu.kg.store.entity.User;
+import alatoo.edu.kg.store.entity.*;
 import alatoo.edu.kg.store.repository.ImageRepository;
 import alatoo.edu.kg.store.repository.PostHistoryRepository;
 import alatoo.edu.kg.store.repository.PostRepository;
@@ -21,6 +18,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,7 +50,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponseDTO createPost(PostRequestDTO dto) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         Post post = postMapper.toEntity(dto);
         post.setAuthor(currentUser);
         post.setCreatedAt(LocalDateTime.now());
@@ -67,7 +65,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findByIdWithAuthor(id)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + id));
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         if (!post.getAuthor().getId().equals(currentUser.getId())) {
             throw new UnauthorizedActionException("You are not the author of this post");
         }
@@ -84,13 +82,28 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    @Transactional
     public PostResponseDTO getPost(Long id) {
-        return postRepository.findByIdWithAuthor(id)
-                .map(postMapper::toDTO)
+        Post post = postRepository.findByIdWithAuthor(id)
                 .orElseThrow(() -> new NotFoundException("Post with id " + id + " not found"));
+
+        boolean isFavorite = false;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !(authentication.getPrincipal() instanceof String)) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userRepository.findByIdWithFavoritePosts(userDetails.getId())
+                    .orElseThrow(() -> new NotFoundException("User not found with id: " + userDetails.getId()));
+
+            isFavorite = user.getFavoritePosts().contains(post);
+        }
+
+        PostResponseDTO dto = postMapper.toDTO(post);
+        dto.setFavorite(isFavorite);
+        return dto;
     }
 
     @Override
+    @Transactional
     public List<PostResponseDTO> getAllPosts() {
         List<Post> posts = postRepository.findAllWithAuthors();
         return posts.stream()
@@ -103,8 +116,8 @@ public class PostServiceImpl implements PostService {
         Post existingPost = postRepository.findByIdWithAuthor(id)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + id));
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!existingPost.getAuthor().getUsername().equals(username)) {
+        User currentUser = getCurrentUser();
+        if (!existingPost.getAuthor().getId().equals(currentUser.getId())) {
             throw new UnauthorizedActionException("You are not authorized to delete this post");
         }
 
@@ -116,7 +129,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         if (!post.getAuthor().getId().equals(currentUser.getId())) {
             throw new UnauthorizedActionException("You are not the author of this post");
         }
@@ -153,7 +166,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         if (!post.getAuthor().getId().equals(currentUser.getId())) {
             throw new UnauthorizedActionException("You are not the author of this post");
         }
@@ -182,7 +195,15 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void addPostToFavorites(Long postId) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedActionException("User not authenticated");
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User currentUser = userRepository.findByIdWithFavoritePosts(userDetails.getId())
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userDetails.getId()));
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
 
@@ -192,7 +213,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void removePostFromFavorites(Long postId) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
 
@@ -202,7 +223,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostResponseDTO> getFavoritePosts() {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = getCurrentUser();
         Set<Post> favoritePosts = currentUser.getFavoritePosts();
 
         return favoritePosts.stream()
@@ -217,6 +238,31 @@ public class PostServiceImpl implements PostService {
                 .map(this::convertHistoryToPostResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void restorePostVersion(Long postId, Integer version) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
+
+        User currentUser = getCurrentUser();
+
+        if (!post.getAuthor().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedActionException("You are not the author of this post");
+        }
+
+        PostHistory history = postHistoryRepository.findByPostIdAndVersion(postId, version)
+                .orElseThrow(() -> new NotFoundException("Version not found"));
+
+        savePostHistory(post, currentUser);
+
+        post.setTitle(history.getTitle());
+        post.setDescription(history.getDescription());
+        post.setUpdatedAt(LocalDateTime.now());
+        post.setCurrentVersion(history.getVersion());
+
+        postRepository.save(post);
+    }
+
 
     private PostResponseDTO convertHistoryToPostResponseDTO(PostHistory history) {
         return PostResponseDTO.builder()
@@ -242,27 +288,14 @@ public class PostServiceImpl implements PostService {
         postHistoryRepository.save(history);
     }
 
-    @Override
-    public void restorePostVersion(Long postId, Integer version) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Post not found with id: " + postId));
-
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!post.getAuthor().getId().equals(currentUser.getId())) {
-            throw new UnauthorizedActionException("You are not the author of this post");
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedActionException("User not authenticated");
         }
 
-        PostHistory history = postHistoryRepository.findByPostIdAndVersion(postId, version)
-                .orElseThrow(() -> new NotFoundException("Version not found"));
-
-        savePostHistory(post, currentUser);
-
-        post.setTitle(history.getTitle());
-        post.setDescription(history.getDescription());
-        post.setUpdatedAt(LocalDateTime.now());
-        post.setCurrentVersion(history.getVersion());
-
-        postRepository.save(post);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userRepository.findByIdWithFavoritePosts(userDetails.getId())
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userDetails.getId()));
     }
 }
-

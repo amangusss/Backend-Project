@@ -1,5 +1,7 @@
 package alatoo.edu.kg.api.service.impl;
 
+import alatoo.edu.kg.store.entity.User;
+import alatoo.edu.kg.store.entity.UserDetailsImpl;
 import alatoo.edu.kg.store.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        return repository.findByLogin(login)
+        User user = repository.findByLogin(login)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found by login: " + login));
+
+        return UserDetailsImpl.build(user);
     }
 }

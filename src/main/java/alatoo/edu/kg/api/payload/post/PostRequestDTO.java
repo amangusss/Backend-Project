@@ -1,6 +1,5 @@
 package alatoo.edu.kg.api.payload.post;
 
-import alatoo.edu.kg.store.entity.User;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

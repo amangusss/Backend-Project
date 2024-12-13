@@ -14,6 +14,7 @@ import alatoo.edu.kg.api.service.RefreshTokenService;
 import alatoo.edu.kg.api.utils.JwtUtils;
 import alatoo.edu.kg.store.entity.PasswordResetToken;
 import alatoo.edu.kg.store.entity.User;
+import alatoo.edu.kg.store.entity.UserDetailsImpl;
 import alatoo.edu.kg.store.entity.VerificationToken;
 import alatoo.edu.kg.store.enums.user.Roles;
 import alatoo.edu.kg.store.repository.PasswordResetTokenRepository;
@@ -95,7 +96,6 @@ public class AuthServiceImpl implements AuthService {
         return userMapper.toDTO(savedUser);
     }
 
-    @Override
     public UserLoginResponseDTO login(UserLoginRequestDTO dto) {
         logger.info("User attempting to log in with login='{}'", dto.login());
 
@@ -103,11 +103,15 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(dto.login(), dto.password())
         );
 
-        User user = (User) authentication.getPrincipal();
-        if (!user.isEnabled()) {
-            logger.warn("User account '{}' is not enabled.", user.getUsername());
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        if (!userDetails.isEnabled()) {
+            logger.warn("User account '{}' is not enabled.", userDetails.getUsername());
             throw new NotFoundException("User account is not enabled");
         }
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userDetails.getId()));
 
         String accessToken = jwtUtils.generateToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);
